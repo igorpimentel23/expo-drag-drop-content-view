@@ -173,14 +173,18 @@ class DragDropContentView: UIView, UIDropInteractionDelegate, UIDragInteractionD
                 UTType.image.identifier,
                 UTType.video.identifier,
                 UTType.movie.identifier,
-                UTType.text.identifier
+                UTType.text.identifier,
+                UTType.pdf.identifier,   // Adicionar suporte a PDFs
+            "com.microsoft.word.doc" // Adicionar suporte a documentos do Word
             ]
         } else {
             typeIdentifiers = [
                 kUTTypeImage as String,
                 kUTTypeMovie as String,
                 kUTTypeVideo as String,
-                kUTTypeText as String
+                kUTTypeText as String,
+                kUTTypePDF as String,    // Adicionar suporte a PDFs
+            kUTTypeWord as String     // Adicionar suporte a documentos do Word (defina isso adequadamente se necessário)
             ]
         }
 
@@ -224,6 +228,13 @@ class DragDropContentView: UIView, UIDropInteractionDelegate, UIDragInteractionD
                     }
                 } else if itemType == SessionItemType.text {
                     loadTextObject(dragItem: dragItem) { asset in
+                        if let asset = asset {
+                            assets.append(asset)
+                        }
+                        dispatchGroup.leave()
+                    }
+                } else if itemType == SessionItemType.pdf {
+                    loadPDFObject(dragItem: dragItem) { asset in
                         if let asset = asset {
                             assets.append(asset)
                         }
@@ -314,5 +325,17 @@ class DragDropContentView: UIView, UIDropInteractionDelegate, UIDragInteractionD
                }
            }
     }
+
+    private func loadPDFObject(dragItem: UIDragItem, completion: @escaping (NSMutableDictionary?) -> Void) {
+        dragItem.itemProvider.loadInPlaceFileRepresentation(forTypeIdentifier: UTType.pdf.identifier) { (url, _, error) in
+        guard let url = url else {
+            print("Error loading PDF file: \(String(describing: error))")
+            completion(nil)
+            return
+        }
+        // Aqui você pode manipular o arquivo PDF conforme necessário, e.g., salvar a URL ou ler o conteúdo
+        completion(["type": "pdf", "url": url.absoluteString])
+    }
+}
 
 }
